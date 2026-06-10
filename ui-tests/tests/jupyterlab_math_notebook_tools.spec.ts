@@ -19,7 +19,7 @@ test('should emit an activation console message', async ({ page }) => {
     logs.filter(
       s =>
         s ===
-        'JupyterLab extension jupyterlab_math_notebook_tools is activated!'
+        'JupyterLab Math Notebook Tools activated: jupyterlab_math_notebook_tools:plugin'
     )
   ).toHaveLength(1);
 });

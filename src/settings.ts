@@ -2,19 +2,22 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { Signal } from '@lumino/signaling';
 
 export interface IExtensionSettings {
-  mathMacros: Record<string, string | [string, number] | unknown[]>;
   renderedSearchDebounceMs: number;
 }
 
 export const DEFAULT_SETTINGS: IExtensionSettings = {
-  mathMacros: {},
   renderedSearchDebounceMs: 150
 };
 
 export class SettingsController {
   constructor(options: SettingsController.IOptions) {
     this._pluginId = options.pluginId;
-    void this._load(options.registry);
+    void this._load(options.registry).catch(reason => {
+      console.error(
+        `JupyterLab Math Notebook Tools failed to load settings for ${this._pluginId}.`,
+        reason
+      );
+    });
   }
 
   get changed(): Signal<this, IExtensionSettings> {
@@ -29,21 +32,19 @@ export class SettingsController {
     this._registrySettings = await registry.load(this._pluginId);
     this._registrySettings.changed.connect(this._onChanged, this);
     this._onChanged();
+    console.log(
+      `JupyterLab Math Notebook Tools settings loaded for ${this._pluginId}.`
+    );
   }
 
   private _onChanged(): void {
     const composite = this._registrySettings?.composite ?? {};
-    const mathMacros =
-      typeof composite.mathMacros === 'object' && composite.mathMacros !== null
-        ? (composite.mathMacros as IExtensionSettings['mathMacros'])
-        : DEFAULT_SETTINGS.mathMacros;
     const renderedSearchDebounceMs =
       typeof composite.renderedSearchDebounceMs === 'number'
         ? composite.renderedSearchDebounceMs
         : DEFAULT_SETTINGS.renderedSearchDebounceMs;
 
     this._settings = {
-      mathMacros,
       renderedSearchDebounceMs
     };
     this._changed.emit(this._settings);

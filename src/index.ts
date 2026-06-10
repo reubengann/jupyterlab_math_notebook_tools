@@ -4,12 +4,10 @@ import {
 } from '@jupyterlab/application';
 import { ICommandPalette } from '@jupyterlab/apputils';
 import { INotebookTracker } from '@jupyterlab/notebook';
-import { ILatexTypesetter } from '@jupyterlab/rendermime';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITranslator } from '@jupyterlab/translation';
 
 import { EquationHoverController } from './equationHover';
-import { MathJaxMacroController } from './mathjaxMacros';
 import { RenderedSearchController } from './renderedSearch';
 import { SettingsController } from './settings';
 
@@ -20,16 +18,14 @@ const PLUGIN_ID = 'jupyterlab_math_notebook_tools:plugin';
  */
 const plugin: JupyterFrontEndPlugin<void> = {
   id: PLUGIN_ID,
-  description:
-    'Rendered notebook search, equation copy actions, and global MathJax macros.',
+  description: 'Rendered notebook search and equation copy actions.',
   autoStart: true,
   requires: [INotebookTracker, ISettingRegistry],
-  optional: [ILatexTypesetter, ICommandPalette, ITranslator],
+  optional: [ICommandPalette, ITranslator],
   activate: (
     app: JupyterFrontEnd,
     notebookTracker: INotebookTracker,
     settingRegistry: ISettingRegistry,
-    latexTypesetter: ILatexTypesetter | null,
     palette: ICommandPalette | null,
     translator: ITranslator | null
   ) => {
@@ -48,14 +44,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
       tracker: notebookTracker,
       translator
     });
-    const macros = new MathJaxMacroController({
-      tracker: notebookTracker,
-      typesetter: latexTypesetter
-    });
 
     settings.changed.connect((_, nextSettings) => {
       renderedSearch.updateSettings(nextSettings);
-      macros.updateSettings(nextSettings);
     });
 
     palette?.addItem({
@@ -63,20 +54,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
       category: 'Notebook Operations'
     });
 
-    app.restored
-      .then(() => {
-        macros.updateSettings(settings.settings);
-      })
-      .catch(reason => {
-        console.warn(
-          'Unable to apply JupyterLab Math Notebook Tools settings after restore.',
-          reason
-        );
-      });
-
-    console.log(
-      'JupyterLab extension jupyterlab_math_notebook_tools is activated!'
-    );
+    console.log(`JupyterLab Math Notebook Tools activated: ${PLUGIN_ID}`);
 
     void equationHover;
   }

@@ -11,6 +11,7 @@ export interface IMarkdownCellLike {
     };
   };
   rendered: boolean;
+  update?: () => void;
   editor?: {
     focus?: () => void;
   };

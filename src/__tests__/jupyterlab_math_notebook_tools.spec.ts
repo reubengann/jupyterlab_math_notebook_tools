@@ -1,4 +1,3 @@
-import { normalizeMacros } from '../macros';
 import { extractDisplayEquations, wrapDisplayEquation } from '../tex';
 
 describe('jupyterlab_math_notebook_tools', () => {
@@ -57,19 +56,5 @@ x &=& y \\tag{7-25}
     expect(wrapDisplayEquation('$$\ng = h - Ts\n$$')).toBe(
       '$$\ng = h - Ts\n$$'
     );
-  });
-
-  it('normalizes MathJax macros from settings', () => {
-    expect(
-      normalizeMacros({
-        vec: '{\\boldsymbol{#1}}',
-        dd: ['{\\,d#1}', 1],
-        'not-valid': 'ignored',
-        bad: [1]
-      })
-    ).toEqual({
-      vec: '{\\boldsymbol{#1}}',
-      dd: ['{\\,d#1}', 1]
-    });
   });
 });
