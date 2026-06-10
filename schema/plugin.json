@@ -1,0 +1,44 @@
+{
+  "title": "JupyterLab Math Notebook Tools",
+  "description": "Settings for rendered notebook search, equation copy actions, and global MathJax macros.",
+  "jupyter.lab.setting-icon": "ui-components:search",
+  "jupyter.lab.setting-icon-label": "Math Notebook Tools",
+  "properties": {
+    "mathMacros": {
+      "title": "MathJax macros",
+      "description": "Global MathJax TeX macro definitions keyed by macro name. String values are used as direct replacements; array values can include a replacement and argument count.",
+      "type": "object",
+      "default": {},
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "renderedSearchDebounceMs": {
+      "title": "Rendered search debounce",
+      "description": "Delay in milliseconds before updating rendered notebook search highlights after typing.",
+      "type": "number",
+      "default": 150,
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false,
+  "type": "object"
+}

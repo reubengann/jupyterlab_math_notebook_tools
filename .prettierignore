@@ -1,0 +1,8 @@
+node_modules
+**/node_modules
+**/lib
+**/package.json
+!/package.json
+jupyterlab_math_notebook_tools
+eslint.config.mjs
+.venv
