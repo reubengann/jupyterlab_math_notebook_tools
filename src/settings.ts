@@ -2,10 +2,14 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { Signal } from '@lumino/signaling';
 
 export interface IExtensionSettings {
+  enableBoldVectorMacro: boolean;
+  mathMacros: Record<string, unknown>;
   renderedSearchDebounceMs: number;
 }
 
 export const DEFAULT_SETTINGS: IExtensionSettings = {
+  enableBoldVectorMacro: false,
+  mathMacros: {},
   renderedSearchDebounceMs: 150
 };
 
@@ -39,12 +43,22 @@ export class SettingsController {
 
   private _onChanged(): void {
     const composite = this._registrySettings?.composite ?? {};
+    const enableBoldVectorMacro =
+      typeof composite.enableBoldVectorMacro === 'boolean'
+        ? composite.enableBoldVectorMacro
+        : DEFAULT_SETTINGS.enableBoldVectorMacro;
+    const mathMacros =
+      typeof composite.mathMacros === 'object' && composite.mathMacros !== null
+        ? (composite.mathMacros as Record<string, unknown>)
+        : DEFAULT_SETTINGS.mathMacros;
     const renderedSearchDebounceMs =
       typeof composite.renderedSearchDebounceMs === 'number'
         ? composite.renderedSearchDebounceMs
         : DEFAULT_SETTINGS.renderedSearchDebounceMs;
 
     this._settings = {
+      enableBoldVectorMacro,
+      mathMacros,
       renderedSearchDebounceMs
     };
     this._changed.emit(this._settings);

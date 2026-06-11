@@ -1,9 +1,44 @@
 {
   "title": "JupyterLab Math Notebook Tools",
-  "description": "Settings for rendered notebook search and equation copy actions.",
+  "description": "Settings for rendered notebook search, equation copy actions, and MathJax macros.",
   "jupyter.lab.setting-icon": "ui-components:search",
   "jupyter.lab.setting-icon-label": "Math Notebook Tools",
   "properties": {
+    "enableBoldVectorMacro": {
+      "title": "Bold vector macro",
+      "description": "Render \\vec{x} as \\mathbf{x}. Custom macros below can override this preset.",
+      "type": "boolean",
+      "default": false
+    },
+    "mathMacros": {
+      "title": "MathJax macros",
+      "description": "Global MathJax TeX macro definitions keyed by macro name. String values are used as direct replacements; array values can include a replacement and argument count.",
+      "type": "object",
+      "default": {},
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
     "renderedSearchDebounceMs": {
       "title": "Rendered search debounce",
       "description": "Delay in milliseconds before updating rendered notebook search highlights after typing.",

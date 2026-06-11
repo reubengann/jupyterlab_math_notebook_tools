@@ -1,3 +1,4 @@
+import { buildMathJaxSeed, normalizeMacros } from '../macros';
 import { extractDisplayEquations, wrapDisplayEquation } from '../tex';
 
 describe('jupyterlab_math_notebook_tools', () => {
@@ -56,5 +57,45 @@ x &=& y \\tag{7-25}
     expect(wrapDisplayEquation('$$\ng = h - Ts\n$$')).toBe(
       '$$\ng = h - Ts\n$$'
     );
+  });
+
+  it('normalizes MathJax macros from settings', () => {
+    expect(
+      normalizeMacros({
+        vec: '\\mathbf{#1}',
+        dd: ['\\,d#1', 1],
+        'not-valid': 'ignored',
+        bad: [1]
+      })
+    ).toEqual({
+      vec: '\\mathbf{#1}',
+      dd: ['\\,d#1', 1]
+    });
+  });
+
+  it('uses the bold vector preset before custom macros', () => {
+    expect(normalizeMacros({}, true)).toEqual({
+      vec: ['\\mathbf{#1}', 1]
+    });
+
+    expect(
+      normalizeMacros(
+        {
+          vec: ['\\mathrm{#1}', 1]
+        },
+        true
+      )
+    ).toEqual({
+      vec: ['\\mathrm{#1}', 1]
+    });
+  });
+
+  it('builds a MathJax macro seed', () => {
+    expect(
+      buildMathJaxSeed({
+        vec: ['\\mathbf{#1}', 1],
+        RR: '\\mathbb{R}'
+      })
+    ).toBe('$$\n\\def\\vec#1{\\mathbf{#1}}\n\\def\\RR{\\mathbb{R}}\n$$');
   });
 });
