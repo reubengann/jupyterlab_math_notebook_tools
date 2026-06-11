@@ -45,7 +45,8 @@ export class RenderedSearchController implements IDisposable {
   }
 
   private _registerCommands(): void {
-    this._app.commands.addCommand('math-notebook-tools:rendered-search', {
+    const command = 'math-notebook-tools:rendered-search';
+    this._app.commands.addCommand(command, {
       label: this._trans.__('Find in Rendered Notebook'),
       caption: this._trans.__(
         'Search rendered Markdown notebook content without opening source cells'
@@ -64,6 +65,12 @@ export class RenderedSearchController implements IDisposable {
         this._show(panel);
       },
       isEnabled: () => !!this._tracker.currentWidget
+    });
+
+    this._app.commands.addKeyBinding({
+      command,
+      keys: ['Accel Shift F'],
+      selector: '.jp-Notebook'
     });
   }
 
