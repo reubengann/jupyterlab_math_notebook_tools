@@ -20,6 +20,7 @@ export class EquationHoverController implements IDisposable {
     this._trans = (options.translator ?? nullTranslator).load('jupyterlab');
     this._clipboard = SystemClipboard.getInstance();
     this._tracker.widgetAdded.connect((_, panel) => this._attach(panel));
+    this._tracker.currentChanged.connect(this._onCurrentChanged, this);
     if (this._tracker.currentWidget) {
       this._attach(this._tracker.currentWidget);
     }
@@ -34,11 +35,20 @@ export class EquationHoverController implements IDisposable {
       return;
     }
     this._isDisposed = true;
+    this._tracker.currentChanged.disconnect(this._onCurrentChanged, this);
     for (const [panel, observer] of this._observers) {
       observer.disconnect();
       this._removeButtons(panel);
     }
     this._observers.clear();
+    for (const timer of this._installTimers.values()) {
+      window.clearTimeout(timer);
+    }
+    this._installTimers.clear();
+    for (const timer of this._positionTimers.values()) {
+      window.clearTimeout(timer);
+    }
+    this._positionTimers.clear();
   }
 
   private _attach(panel: NotebookPanel): void {
@@ -55,7 +65,28 @@ export class EquationHoverController implements IDisposable {
       observer.disconnect();
       this._observers.delete(panel);
       this._removeButtons(panel);
+      const installTimer = this._installTimers.get(panel);
+      if (installTimer !== undefined) {
+        window.clearTimeout(installTimer);
+        this._installTimers.delete(panel);
+      }
+      const positionTimer = this._positionTimers.get(panel);
+      if (positionTimer !== undefined) {
+        window.clearTimeout(positionTimer);
+        this._positionTimers.delete(panel);
+      }
     });
+  }
+
+  private _onCurrentChanged(
+    _: INotebookTracker,
+    panel: NotebookPanel | null
+  ): void {
+    if (!panel) {
+      return;
+    }
+    this._scheduleInstall(panel);
+    this._schedulePosition(panel);
   }
 
   private _scheduleInstall(panel: NotebookPanel): void {
@@ -92,6 +123,33 @@ export class EquationHoverController implements IDisposable {
 
       for (const mathNode of mathNodes) {
         this._addCopyButton(cell, mathNode);
+      }
+    }
+  }
+
+  private _schedulePosition(panel: NotebookPanel): void {
+    const existing = this._positionTimers.get(panel);
+    if (existing !== undefined) {
+      window.clearTimeout(existing);
+    }
+
+    const timer = window.setTimeout(() => {
+      this._positionTimers.delete(panel);
+      this._positionButtons(panel);
+    }, 50);
+    this._positionTimers.set(panel, timer);
+  }
+
+  private _positionButtons(panel: NotebookPanel): void {
+    for (const wrapper of Array.from(
+      panel.node.querySelectorAll('.mnt-EquationWithCopy')
+    )) {
+      const button = wrapper.querySelector<HTMLButtonElement>(
+        '.mnt-EquationCopyButton'
+      );
+      const mathNode = wrapper.querySelector(mathSelector());
+      if (button && mathNode) {
+        this._positionButton(button, mathNode);
       }
     }
   }
@@ -137,6 +195,9 @@ export class EquationHoverController implements IDisposable {
         mathNode;
       const wrapperRect = wrapper.getBoundingClientRect();
       const bodyRect = equationBody.getBoundingClientRect();
+      if (wrapperRect.width === 0 || bodyRect.width === 0) {
+        return;
+      }
       const bodyRight = bodyRect.right - wrapperRect.left;
       const bodyCenter = bodyRect.top + bodyRect.height / 2 - wrapperRect.top;
       const gap =
@@ -198,6 +259,7 @@ export class EquationHoverController implements IDisposable {
   private _clipboard: ClipboardLike;
   private _observers = new Map<NotebookPanel, MutationObserver>();
   private _installTimers = new Map<NotebookPanel, number>();
+  private _positionTimers = new Map<NotebookPanel, number>();
   private _isDisposed = false;
 }
 
