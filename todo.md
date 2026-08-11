@@ -1,0 +1,3 @@
+- Insert from equation library (jupyterlab_math_notebook_tools) into equation forge (if installed)
+- Copy from equation forge directly into a cell (if installed)
+- Copy from cell directly into equation forge (if installed)
