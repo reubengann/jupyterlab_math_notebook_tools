@@ -14,13 +14,18 @@ import { extractDisplayEquations, wrapDisplayEquation } from './tex';
 
 type ClipboardLike = ReturnType<typeof SystemClipboard.getInstance>;
 
+export const ADD_EQUATION_FORGE_ENTRY_COMMAND =
+  'jupyterlab-equation-forge:add-equation-entry';
+
 export class EquationHoverController implements IDisposable {
   constructor(options: EquationHoverController.IOptions) {
+    this._app = options.app;
     this._tracker = options.tracker;
     this._trans = (options.translator ?? nullTranslator).load('jupyterlab');
     this._clipboard = SystemClipboard.getInstance();
     this._tracker.widgetAdded.connect((_, panel) => this._attach(panel));
     this._tracker.currentChanged.connect(this._onCurrentChanged, this);
+    this._app.commands.commandChanged.connect(this._onCommandChanged, this);
     if (this._tracker.currentWidget) {
       this._attach(this._tracker.currentWidget);
     }
@@ -36,6 +41,7 @@ export class EquationHoverController implements IDisposable {
     }
     this._isDisposed = true;
     this._tracker.currentChanged.disconnect(this._onCurrentChanged, this);
+    this._app.commands.commandChanged.disconnect(this._onCommandChanged, this);
     for (const [panel, observer] of this._observers) {
       observer.disconnect();
       this._removeButtons(panel);
@@ -125,6 +131,7 @@ export class EquationHoverController implements IDisposable {
         this._addCopyButton(cell, mathNode);
       }
     }
+    this._syncEquationForgeButtons(panel);
   }
 
   private _schedulePosition(panel: NotebookPanel): void {
@@ -144,12 +151,12 @@ export class EquationHoverController implements IDisposable {
     for (const wrapper of Array.from(
       panel.node.querySelectorAll('.mnt-EquationWithCopy')
     )) {
-      const button = wrapper.querySelector<HTMLButtonElement>(
-        '.mnt-EquationCopyButton'
+      const actions = wrapper.querySelector<HTMLElement>(
+        '.mnt-EquationActions'
       );
       const mathNode = wrapper.querySelector(mathSelector());
-      if (button && mathNode) {
-        this._positionButton(button, mathNode);
+      if (actions && mathNode) {
+        this._positionActions(actions, mathNode);
       }
     }
   }
@@ -164,6 +171,9 @@ export class EquationHoverController implements IDisposable {
     wrapper.className = 'mnt-EquationWithCopy';
     wrapper.dataset.jpSuppressContextMenu = 'true';
 
+    const actions = document.createElement('span');
+    actions.className = 'mnt-EquationActions';
+
     const button = document.createElement('button');
     button.className = 'mnt-EquationCopyButton';
     button.type = 'button';
@@ -176,14 +186,33 @@ export class EquationHoverController implements IDisposable {
       void this._copyTex(cell, mathNode, button);
     });
 
+    const forgeButton = document.createElement('button');
+    forgeButton.className = 'mnt-EquationForgeButton';
+    forgeButton.type = 'button';
+    forgeButton.textContent = 'EF';
+    forgeButton.title = this._trans.__('Add to Equation Forge');
+    forgeButton.setAttribute(
+      'aria-label',
+      this._trans.__('Add equation to Equation Forge')
+    );
+    forgeButton.hidden = !this._app.commands.hasCommand(
+      ADD_EQUATION_FORGE_ENTRY_COMMAND
+    );
+    forgeButton.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      void this._addToEquationForge(cell, mathNode, forgeButton);
+    });
+
     parent.insertBefore(wrapper, mathNode);
-    wrapper.append(mathNode, button);
-    this._positionButton(button, mathNode);
+    actions.append(button, forgeButton);
+    wrapper.append(mathNode, actions);
+    this._positionActions(actions, mathNode);
   }
 
-  private _positionButton(button: HTMLButtonElement, mathNode: Element): void {
+  private _positionActions(actions: HTMLElement, mathNode: Element): void {
     window.requestAnimationFrame(() => {
-      const wrapper = button.closest('.mnt-EquationWithCopy');
+      const wrapper = actions.closest('.mnt-EquationWithCopy');
       if (!wrapper) {
         return;
       }
@@ -205,9 +234,21 @@ export class EquationHoverController implements IDisposable {
           getComputedStyle(wrapper).getPropertyValue('--mnt-equation-copy-gap')
         ) || 16;
 
-      button.style.left = `${Math.max(0, bodyRight + gap)}px`;
-      button.style.top = `${Math.max(0, bodyCenter)}px`;
+      actions.style.left = `${Math.max(0, bodyRight + gap)}px`;
+      actions.style.top = `${Math.max(0, bodyCenter)}px`;
     });
+  }
+
+  private _syncEquationForgeButtons(panel: NotebookPanel): void {
+    const available = this._app.commands.hasCommand(
+      ADD_EQUATION_FORGE_ENTRY_COMMAND
+    );
+    for (const button of Array.from(
+      panel.node.querySelectorAll<HTMLButtonElement>('.mnt-EquationForgeButton')
+    )) {
+      button.hidden = !available;
+    }
+    this._schedulePosition(panel);
   }
 
   private _removeButtons(panel: NotebookPanel): void {
@@ -240,11 +281,30 @@ export class EquationHoverController implements IDisposable {
     this._showCopiedState(button);
   }
 
+  private async _addToEquationForge(
+    cell: IMarkdownCellLike,
+    mathNode: Element,
+    button: HTMLButtonElement
+  ): Promise<void> {
+    const equation = equationForMathNode(cell, mathNode);
+    if (!equation) {
+      return;
+    }
+    await this._app.commands.execute(ADD_EQUATION_FORGE_ENTRY_COMMAND, {
+      latex: equation.body
+    });
+    this._showSuccessState(button, this._trans.__('Added'));
+  }
+
   private _showCopiedState(button: HTMLButtonElement): void {
+    this._showSuccessState(button, this._trans.__('Copied'));
+  }
+
+  private _showSuccessState(button: HTMLButtonElement, title: string): void {
     const originalText = button.textContent ?? '⧉';
     const originalTitle = button.title;
     button.textContent = '✓';
-    button.title = this._trans.__('Copied');
+    button.title = title;
     button.classList.add('mnt-mod-copied');
 
     window.setTimeout(() => {
@@ -254,6 +314,13 @@ export class EquationHoverController implements IDisposable {
     }, 1200);
   }
 
+  private _onCommandChanged(): void {
+    for (const panel of this._observers.keys()) {
+      this._scheduleInstall(panel);
+    }
+  }
+
+  private _app: JupyterFrontEnd;
   private _tracker: INotebookTracker;
   private _trans: ReturnType<ITranslator['load']>;
   private _clipboard: ClipboardLike;
@@ -265,7 +332,7 @@ export class EquationHoverController implements IDisposable {
 
 export namespace EquationHoverController {
   export interface IOptions {
-    app?: JupyterFrontEnd;
+    app: JupyterFrontEnd;
     tracker: INotebookTracker;
     translator?: ITranslator | null;
   }

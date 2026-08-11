@@ -28,7 +28,8 @@
 }
 
 .mnt-RenderedSearch-button,
-.mnt-EquationCopyButton {
+.mnt-EquationCopyButton,
+.mnt-EquationForgeButton {
   background: var(--jp-layout-color2);
   border: var(--jp-border-width) solid var(--jp-border-color1);
   color: var(--jp-ui-font-color1);
@@ -37,24 +38,41 @@
   padding: 3px 6px;
 }
 
-.mnt-EquationCopyButton {
+.mnt-EquationActions {
+  align-items: center;
+  display: flex;
+  gap: 3px;
+  opacity: 0;
+  position: absolute;
+  transform: translateY(-50%);
+  transition: opacity 120ms ease-in-out;
+  z-index: 1;
+}
+
+.mnt-EquationCopyButton,
+.mnt-EquationForgeButton {
   align-items: center;
   border-radius: 3px;
   display: inline-flex;
   height: 18px;
   justify-content: center;
   line-height: 1;
-  opacity: 0;
   padding: 0;
-  position: absolute;
-  transform: translateY(-50%);
-  transition: opacity 120ms ease-in-out;
   width: 18px;
-  z-index: 1;
+}
+
+.mnt-EquationForgeButton {
+  font-size: 8px;
+  width: 22px;
+}
+
+.mnt-EquationForgeButton[hidden] {
+  display: none;
 }
 
 .mnt-RenderedSearch-button:hover,
-.mnt-EquationCopyButton:hover {
+.mnt-EquationCopyButton:hover,
+.mnt-EquationForgeButton:hover {
   background: var(--jp-layout-color3);
 }
 
@@ -102,17 +120,18 @@
   width: 100%;
 }
 
-.mnt-EquationCopyButton:focus,
-.mnt-EquationCopyButton:hover {
+.mnt-EquationActions:focus-within,
+.mnt-EquationActions:hover {
   opacity: 1;
 }
 
-.mnt-EquationWithCopy:focus-within .mnt-EquationCopyButton,
-.mnt-EquationWithCopy:hover .mnt-EquationCopyButton {
+.mnt-EquationWithCopy:focus-within .mnt-EquationActions,
+.mnt-EquationWithCopy:hover .mnt-EquationActions {
   opacity: 0.75;
 }
 
-.mnt-EquationCopyButton.mnt-mod-copied {
+.mnt-EquationCopyButton.mnt-mod-copied,
+.mnt-EquationForgeButton.mnt-mod-copied {
   background: var(--jp-success-color1);
   border-color: var(--jp-success-color1);
   color: var(--jp-ui-inverse-font-color1);
