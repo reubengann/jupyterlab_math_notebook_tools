@@ -1,8 +1,14 @@
 # jupyterlab_math_notebook_tools
 
-[![Github Actions Status](/workflows/Build/badge.svg)](/actions/workflows/build.yml)
+<!-- [![Github Actions Status](/workflows/Build/badge.svg)](/actions/workflows/build.yml) -->
 
-A JupyterLab extension.
+A JupyterLab extension that adds nice math-related features.
+
+- Easy "copy equation" hover button on rendered equations
+- Adds "copy to equation forge" hover button on rendered equations (if jupyterlab-equation-forge is installed)
+- Apply math macros (such as making vectors bold face)
+- Search rendered math
+- Capture mode to increase fonts for screen capture
 
 ## Requirements
 
