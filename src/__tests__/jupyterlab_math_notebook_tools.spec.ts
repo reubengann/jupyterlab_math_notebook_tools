@@ -64,6 +64,7 @@ x &=& y \\tag{7-25}
       normalizeMacros({
         vec: '\\mathbf{#1}',
         dd: ['\\,d#1', 1],
+        newKey: null,
         'not-valid': 'ignored',
         bad: [1]
       })

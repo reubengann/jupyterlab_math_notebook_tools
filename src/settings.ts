@@ -2,12 +2,16 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { Signal } from '@lumino/signaling';
 
 export interface IExtensionSettings {
+  captureModeEnabled: boolean;
+  captureModeScale: number;
   enableBoldVectorMacro: boolean;
   mathMacros: Record<string, unknown>;
   renderedSearchDebounceMs: number;
 }
 
 export const DEFAULT_SETTINGS: IExtensionSettings = {
+  captureModeEnabled: false,
+  captureModeScale: 1.25,
   enableBoldVectorMacro: false,
   mathMacros: {},
   renderedSearchDebounceMs: 150
@@ -16,7 +20,7 @@ export const DEFAULT_SETTINGS: IExtensionSettings = {
 export class SettingsController {
   constructor(options: SettingsController.IOptions) {
     this._pluginId = options.pluginId;
-    void this._load(options.registry).catch(reason => {
+    this._ready = this._load(options.registry).catch(reason => {
       console.error(
         `JupyterLab Math Notebook Tools failed to load settings for ${this._pluginId}.`,
         reason
@@ -32,6 +36,14 @@ export class SettingsController {
     return this._settings;
   }
 
+  async setCaptureModeEnabled(enabled: boolean): Promise<void> {
+    await this._ready;
+    if (!this._registrySettings) {
+      throw new Error(`Settings failed to load for ${this._pluginId}.`);
+    }
+    await this._registrySettings.set('captureModeEnabled', enabled);
+  }
+
   private async _load(registry: ISettingRegistry): Promise<void> {
     this._registrySettings = await registry.load(this._pluginId);
     this._registrySettings.changed.connect(this._onChanged, this);
@@ -43,6 +55,14 @@ export class SettingsController {
 
   private _onChanged(): void {
     const composite = this._registrySettings?.composite ?? {};
+    const captureModeEnabled =
+      typeof composite.captureModeEnabled === 'boolean'
+        ? composite.captureModeEnabled
+        : DEFAULT_SETTINGS.captureModeEnabled;
+    const captureModeScale =
+      typeof composite.captureModeScale === 'number'
+        ? composite.captureModeScale
+        : DEFAULT_SETTINGS.captureModeScale;
     const enableBoldVectorMacro =
       typeof composite.enableBoldVectorMacro === 'boolean'
         ? composite.enableBoldVectorMacro
@@ -57,6 +77,8 @@ export class SettingsController {
         : DEFAULT_SETTINGS.renderedSearchDebounceMs;
 
     this._settings = {
+      captureModeEnabled,
+      captureModeScale,
       enableBoldVectorMacro,
       mathMacros,
       renderedSearchDebounceMs
@@ -66,6 +88,7 @@ export class SettingsController {
 
   private _changed = new Signal<this, IExtensionSettings>(this);
   private _pluginId: string;
+  private _ready: Promise<void>;
   private _registrySettings: ISettingRegistry.ISettings | null = null;
   private _settings = DEFAULT_SETTINGS;
 }

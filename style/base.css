@@ -4,6 +4,28 @@
     https://jupyterlab.readthedocs.io/en/stable/developer/css.html
 */
 
+/*
+ * Capture mode deliberately targets document content rather than JupyterLab
+ * chrome. The root class and scale property are managed by CaptureModeController.
+ */
+.mnt-mod-captureMode .jp-Notebook .cm-editor {
+  font-size: calc(var(--jp-code-font-size) * var(--mnt-capture-scale));
+}
+
+.mnt-mod-captureMode .jp-Notebook .jp-MarkdownOutput,
+.mnt-mod-captureMode .jp-Notebook .jp-RenderedHTMLCommon,
+.mnt-mod-captureMode .jp-Notebook .jp-OutputArea-output {
+  font-size: calc(var(--jp-content-font-size1) * var(--mnt-capture-scale));
+}
+
+.mnt-mod-captureMode .jp-Notebook .jp-OutputArea-output pre {
+  font-size: calc(var(--jp-code-font-size) * var(--mnt-capture-scale));
+}
+
+.mnt-mod-captureMode .jp-EquationForge-content .equation-forge-ui {
+  font-size: calc(18px * var(--mnt-capture-scale));
+}
+
 .mnt-RenderedSearch {
   align-items: center;
   background: var(--jp-layout-color1);

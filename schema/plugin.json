@@ -4,6 +4,20 @@
   "jupyter.lab.setting-icon": "ui-components:search",
   "jupyter.lab.setting-icon-label": "Math Notebook Tools",
   "properties": {
+    "captureModeEnabled": {
+      "title": "Capture mode",
+      "description": "Enlarge notebook and Equation Forge content without scaling JupyterLab controls.",
+      "type": "boolean",
+      "default": false
+    },
+    "captureModeScale": {
+      "title": "Capture mode scale",
+      "description": "Scale factor applied to notebook and Equation Forge content while capture mode is enabled.",
+      "type": "number",
+      "default": 1.25,
+      "minimum": 1,
+      "maximum": 2
+    },
     "enableBoldVectorMacro": {
       "title": "Bold vector macro",
       "description": "Render \\vec{x} as \\mathbf{x}. Custom macros below can override this preset.",
@@ -12,32 +26,10 @@
     },
     "mathMacros": {
       "title": "MathJax macros",
-      "description": "Global MathJax TeX macro definitions keyed by macro name. String values are used as direct replacements; array values can include a replacement and argument count.",
+      "description": "Global MathJax TeX macro definitions keyed by macro name. String values are used as direct replacements; array values can include a replacement and argument count. Invalid entries are ignored.",
       "type": "object",
       "default": {},
-      "additionalProperties": {
-        "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "array",
-            "minItems": 2,
-            "maxItems": 2,
-            "items": {
-              "oneOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "integer",
-                  "minimum": 0
-                }
-              ]
-            }
-          }
-        ]
-      }
+      "additionalProperties": true
     },
     "renderedSearchDebounceMs": {
       "title": "Rendered search debounce",

@@ -8,6 +8,10 @@ import { ILatexTypesetter } from '@jupyterlab/rendermime';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITranslator } from '@jupyterlab/translation';
 
+import {
+  CaptureModeController,
+  TOGGLE_CAPTURE_MODE_COMMAND
+} from './captureMode';
 import { EquationHoverController } from './equationHover';
 import { MathJaxSeedController } from './mathjaxSeed';
 import { RenderedSearchController } from './renderedSearch';
@@ -37,6 +41,11 @@ const plugin: JupyterFrontEndPlugin<void> = {
       pluginId: PLUGIN_ID,
       registry: settingRegistry
     });
+    const captureMode = new CaptureModeController({
+      app,
+      tracker: notebookTracker,
+      settings
+    });
     const renderedSearch = new RenderedSearchController({
       app,
       tracker: notebookTracker,
@@ -62,6 +71,10 @@ const plugin: JupyterFrontEndPlugin<void> = {
     });
 
     palette?.addItem({
+      command: TOGGLE_CAPTURE_MODE_COMMAND,
+      category: 'Notebook Operations'
+    });
+    palette?.addItem({
       command: 'math-notebook-tools:rendered-search',
       category: 'Notebook Operations'
     });
@@ -69,6 +82,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
     console.log(`JupyterLab Math Notebook Tools activated: ${PLUGIN_ID}`);
 
     void equationHover;
+    void captureMode;
     void mathJaxSeed;
   }
 };
